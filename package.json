@@ -1,0 +1,70 @@
+{
+  "name": "dsh-context-effort",
+  "version": "0.1.0",
+  "description": "DSH Web plugin: shows the model's context window and current usage in the composer, switches reasoning effort in one click, and edits the model's context window inline.",
+  "type": "module",
+  "license": "MIT",
+  "author": "striver8 <455956991@qq.com>",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "lib",
+    "locale",
+    "src",
+    "build.mjs",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/striver8/dsh-context-effort.git"
+  },
+  "homepage": "https://github.com/striver8/dsh-context-effort#readme",
+  "bugs": {
+    "url": "https://github.com/striver8/dsh-context-effort/issues"
+  },
+  "engines": {
+    "dsh": ">=0.2.1-rc.2"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-model-selection"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "prepack": "node build.mjs"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "context-window",
+    "reasoning-effort",
+    "cordis"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "js-yaml": "^5.4.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}

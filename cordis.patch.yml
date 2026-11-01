@@ -1,0 +1,5 @@
+# dsh bundle patch: 把本插件插入 profile 的图层栈。
+# 卸载/停用后自动回退，不影响官方 composer 的 context meter 与 model 座位。
+- insert:
+    - id: context-effort
+      name: 'dsh-context-effort'
