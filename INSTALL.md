@@ -54,7 +54,7 @@
 
 ```powershell
 dsh plugin --profile <profile> add dsh-context-effort     # 从 npm
-dsh plugin --profile <profile> add <path>\dsh-context-effort-0.1.0.tgz   # 从本地 tarball
+dsh plugin --profile <profile> add <path>\dsh-context-effort-0.1.1.tgz   # 从本地 tarball
 ```
 
 `dsh plugin add` 会自动把插件登记进 `dsh.profile.bundles`（DSH 的 `reconcile` 步骤）。

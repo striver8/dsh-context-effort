@@ -127,7 +127,7 @@ dsh plugin add dsh-context-effort
 ### 方式二：GitHub Release 预构建包
 
 ```powershell
-dsh plugin add https://github.com/striver8/dsh-context-effort/releases/download/v0.1.0/dsh-context-effort-0.1.0.tgz
+dsh plugin add https://github.com/striver8/dsh-context-effort/releases/download/v0.1.1/dsh-context-effort-0.1.1.tgz
 ```
 
 ### 方式三：便携脚本（不依赖 pnpm / 网络，适合 desktop profile）

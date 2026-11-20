@@ -25,7 +25,6 @@ import {
 import { createPortal } from 'react-dom'
 import {
   Tooltip,
-  useAnchoredPosition,
   useDismissOnOutsidePointer,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 
@@ -324,7 +323,9 @@ export function ContextEffort(props) {
   // 正常状态 —— 那样会让面板永远打不开。空目录在面板里显示空态。
   const canEdit = available !== false
 
-  const position = useAnchoredPosition({
+  // 宿主 0.2.2 起 primitives 不再导出 useAnchoredPosition，
+  // 改由本地 usePanelPosition 计算 fixed 坐标（见文件末尾实现）。
+  const position = usePanelPosition({
     open: open && canEdit,
     anchorRef: rootRef,
     panelRef,
@@ -995,6 +996,76 @@ function row(key, label, value) {
 /* ------------------------------------------------------------------ *
  * 3. 目录 store → React state
  * ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ *
+ * 面板定位（本地实现，替代已移除的 primitives.useAnchoredPosition）
+ *
+ * 宿主 0.2.2 起 `@deepseek-ai/dsh-client-ui-primitives` 移除了
+ * `useAnchoredPosition`（官方改用 CSS Anchor Positioning），插件里再调用
+ * 会拿到 undefined 直接抛错。这里用 getBoundingClientRect 计算 fixed
+ * 坐标：跟随锚点滚动/缩放、面板尺寸变化重算，越界时钳到 margin。
+ * ------------------------------------------------------------------ */
+
+/**
+ * @param {object} options
+ * @param {boolean} options.open 面板是否打开；关闭时返回 null。
+ * @param {{current: (Element|null)}} options.anchorRef 触发器元素。
+ * @param {{current: (Element|null)}} options.panelRef 面板元素。
+ * @param {'top'|'bottom'} [options.side] 首选方向，空间不足时翻到另一侧。
+ * @param {number} [options.gap] 与锚点的间距。
+ * @param {number} [options.margin] 距窗口边缘的最小留白。
+ * @returns {{top: number, left: number} | null} fixed 定位坐标。
+ */
+function usePanelPosition({ open, anchorRef, panelRef, side = 'top', gap = 8, margin = 12 }) {
+  const [position, setPosition] = useState(null)
+
+  const compute = useCallback(() => {
+    const anchor = anchorRef.current
+    if (!anchor) return
+    const rect = anchor.getBoundingClientRect()
+    const panel = panelRef.current
+    const width = panel ? panel.offsetWidth : Math.min(320, window.innerWidth - margin * 2)
+    const height = panel ? panel.offsetHeight : 0
+    let left = rect.left
+    if (left + width > window.innerWidth - margin) left = window.innerWidth - margin - width
+    if (left < margin) left = margin
+    let top = side === 'top' ? rect.top - gap - height : rect.bottom + gap
+    if (side === 'top' && top < margin) top = rect.bottom + gap
+    if (side !== 'top' && top + height > window.innerHeight - margin) {
+      top = Math.max(margin, rect.top - gap - height)
+    }
+    setPosition({ top: Math.round(top), left: Math.round(left) })
+  }, [anchorRef, panelRef, side, gap, margin])
+
+  useEffect(() => {
+    if (!open) {
+      setPosition(null)
+      return undefined
+    }
+    let alive = true
+    // 首帧面板尚未渲染，拿不到真实尺寸；下一帧再算一次。
+    const first = window.requestAnimationFrame(() => { if (alive) compute() })
+    const second = window.requestAnimationFrame(() => { if (alive) compute() })
+    let observer
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(() => compute())
+      if (panelRef.current) observer.observe(panelRef.current)
+      if (anchorRef.current) observer.observe(anchorRef.current)
+    }
+    window.addEventListener('resize', compute)
+    window.addEventListener('scroll', compute, true)
+    return () => {
+      alive = false
+      window.cancelAnimationFrame(first)
+      window.cancelAnimationFrame(second)
+      if (observer !== undefined) observer.disconnect()
+      window.removeEventListener('resize', compute)
+      window.removeEventListener('scroll', compute, true)
+    }
+  }, [open, compute, anchorRef, panelRef])
+
+  return position
+}
 
 const EMPTY_DIRECTORY_STATE = {
   status: 'idle',
